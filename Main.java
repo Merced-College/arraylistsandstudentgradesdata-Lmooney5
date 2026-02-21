@@ -1,8 +1,7 @@
-/*
- * Name/s: Logan Mooneyham
- * Date: 2/20/2026
- * Program: Course Grades Analyzer - reads CSV grade totals and analyzes A percentages.
- */
+//Name: Logan Mooneyham
+//Date: 2/20/2026
+//Program: Course Grades Analyzer - reads CSV grade totals and analyzes A percentages.
+ 
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,39 +15,53 @@ public class Main {
         ArrayList<Course> courses = new ArrayList<>();
 
         try {
-            File file = new File("grades.csv"); 
+            File file = new File("courseAndGradesData.csv");
             Scanner fileScanner = new Scanner(file);
 
-            // Skip header
             if (fileScanner.hasNextLine()) {
-                fileScanner.nextLine();
-            }
+            fileScanner.nextLine(); // Skip first metadata/header line
+        }
 
             while (fileScanner.hasNextLine()) {
-                String line = fileScanner.nextLine();
-                String[] parts = line.split(",");
+    String line = fileScanner.nextLine().trim();
 
-                String courseName = parts[0].trim();
+    if (line.isEmpty()) {
+        continue;
+    }
 
-                ArrayList<Integer> grades = new ArrayList<>();
-                for (int i = 1; i < parts.length; i++) {
-                    grades.add(Integer.parseInt(parts[i].trim()));
-                }
+    String[] parts = line.split(",");
 
-                // Check for duplicate course
-                boolean found = false;
-                for (Course c : courses) {
-                    if (c.getCourseName().equalsIgnoreCase(courseName)) {
-                        c.addGrades(grades);
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    courses.add(new Course(courseName, grades));
-                }
+            if (parts.length < 6) {
+            continue;
             }
+
+            String courseName = parts[0].trim();
+
+            if (courseName.equalsIgnoreCase("Course") ||
+            courseName.equalsIgnoreCase("Total") ||
+            courseName.toLowerCase().contains("count")) {
+            continue;
+    }
+
+            ArrayList<Integer> grades = new ArrayList<>();
+
+            boolean validRow = true;
+
+            for (int i = 1; i <= 5; i++) {
+        try {
+            grades.add(Integer.parseInt(parts[i].trim()));
+        } catch (Exception e) {
+            validRow = false;
+            break;
+        }
+    }
+
+            if (!validRow) {
+             continue;
+          }
+
+            courses.add(new Course(courseName, grades));
+        }
 
             fileScanner.close();
 
@@ -58,47 +71,48 @@ public class Main {
         }
 
         // Print table header
-        System.out.printf("%-10s %6s %6s %6s %6s %6s %8s %8s\n",
+        System.out.printf("%-12s %6s %6s %6s %6s %6s %8s %8s\n",
                 "Course", "A", "B", "C", "D", "F", "Total", "A%");
 
-        // Print all courses
+        // Print summary table
         for (Course c : courses) {
             System.out.println(c);
         }
 
-        // Find highest A%
-        Course best = courses.get(0);
+        // Find course with highest A%
+        if (courses.size() > 0) {
+            Course best = courses.get(0);
 
-        for (Course c : courses) {
-            if (c.getAPercent() > best.getAPercent()) {
-                best = c;
+            for (Course c : courses) {
+                if (c.getAPercent() > best.getAPercent()) {
+                    best = c;
+                }
             }
-        }
 
-        System.out.println("\nCourse with Highest A%:");
-        System.out.println(best);
+            System.out.println("\nCourse with Highest A%:");
+            System.out.println(best);
+        }
 
         // Linear search
         Scanner input = new Scanner(System.in);
         System.out.print("\nEnter a course name to search: ");
         String searchName = input.nextLine();
 
-        boolean found = false;
+        boolean foundCourse = false;
 
         for (Course c : courses) {
             if (c.getCourseName().equalsIgnoreCase(searchName)) {
-                System.out.println("Course found:");
+                System.out.println("\nCourse Found:");
                 System.out.println(c);
-                found = true;
+                foundCourse = true;
                 break;
             }
         }
 
-        if (!found) {
+        if (!foundCourse) {
             System.out.println("Course not found.");
         }
 
         input.close();
     }
 }
-
